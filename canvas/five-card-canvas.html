@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>五卡画布 · Five-Card Canvas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
+<style>
+  /* Reset & Base */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:       #1A1A2E;
+    --gold:       #C4882F;
+    --light-gold: #FEFBF5;
+    --surface:    #FFFFFF;
+    --gray-100:   #F5F4F1;
+    --gray-200:   #E8E5DE;
+    --gray-500:   #8A8578;
+    --gray-700:   #4A4538;
+    --line-color: #E0DCD3;
+    --decision:   #1A1A2E;
+    --method:     #3A6B5C;
+    --case:       #C4882F;
+    --risk:       #B8453A;
+    --preference: #5B4A8A;
+  }
+
+  /* Print Setup */
+  @page {
+    size: A4;
+    margin: 12mm 14mm 10mm 14mm;
+  }
+
+  html {
+    font-size: 14px;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body {
+    font-family: 'DM Sans', -apple-system, 'Segoe UI', sans-serif;
+    background: #ECEAE4;
+    color: var(--gray-700);
+    line-height: 1.5;
+    display: flex;
+    justify-content: center;
+    padding: 16px 8px;
+  }
+
+  @media print {
+    body { background: white; padding: 0; }
+    .canvas { box-shadow: none; border: none; }
+  }
+
+  /* Canvas Container */
+  .canvas {
+    width: 100%;
+    max-width: 186mm;
+    background: var(--surface);
+    border: 1px solid var(--gray-200);
+    box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    padding: 10mm 12mm 6mm 12mm;
+    display: flex;
+    flex-direction: column;
+    gap: 5mm;
+  }
+
+  /* Header */
+  .header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 2px solid var(--navy);
+    padding-bottom: 3mm;
+    margin-bottom: 1mm;
+  }
+  .header-title {
+    font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--navy);
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+  }
+  .header-subtitle {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 1px;
+  }
+  .header-right {
+    text-align: right;
+    font-size: 0.65rem;
+    color: var(--gray-500);
+    line-height: 1.4;
+  }
+
+  /* Instruction Block */
+  .instruction {
+    background: var(--light-gold);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 3px 3px 0;
+    padding: 2.5mm 4mm;
+    font-size: 0.68rem;
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    gap: 3mm;
+  }
+  .instruction-icon {
+    font-size: 1.1rem;
+    flex-shrink: 0;
+  }
+
+  /* Cards Grid */
+  .cards-area {
+    display: flex;
+    flex-direction: column;
+    gap: 4.5mm;
+    flex: 1;
+  }
+
+  /* Row 2: Method | Case | Risk (3 columns) */
+  .row-middle {
+    display: flex;
+    gap: 4mm;
+    flex: 1;
+    min-height: 68mm;
+  }
+
+  /* Card Component */
+  .card {
+    background: var(--surface);
+    border: 1.5px solid var(--line-color);
+    border-radius: 3px;
+    padding: 3mm 4mm 2mm 4mm;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: border-color 0.15s;
+  }
+
+  .card--decision   { border-top: 3mm solid var(--decision); }
+  .card--method     { border-top: 3mm solid var(--method); flex: 1; }
+  .card--case       { border-top: 3mm solid var(--case);   flex: 1.3; }
+  .card--risk       { border-top: 3mm solid var(--risk);   flex: 1; }
+  .card--preference { border-top: 3mm solid var(--preference); }
+
+  /* Card Header */
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: 2mm;
+    margin-bottom: 1.5mm;
+  }
+  .card-icon {
+    font-size: 0.95rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .card-name {
+    font-family: 'Cormorant Garamond', 'Times New Roman', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--navy);
+    line-height: 1.2;
+  }
+  .card-prompt {
+    font-size: 0.6rem;
+    color: var(--gray-500);
+    font-style: italic;
+    line-height: 1.3;
+    margin-bottom: 2.5mm;
+    padding-bottom: 1.5mm;
+    border-bottom: 1px dotted var(--line-color);
+  }
+
+  /* Lined writing area */
+  .card-lines {
+    flex: 1;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent,
+      transparent 5.8mm,
+      var(--line-color) 5.8mm,
+      var(--line-color) 6mm
+    );
+    min-height: 22mm;
+  }
+
+  .card--decision .card-lines { min-height: 28mm; }
+  .card--preference .card-lines { min-height: 28mm; }
+
+  /* Footer */
+  .footer {
+    border-top: 1px solid var(--gray-200);
+    padding-top: 2.5mm;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.58rem;
+    color: var(--gray-500);
+  }
+  .footer-right { font-style: italic; }
+
+  /* Responsive / Screen Only */
+  @media screen and (max-width: 210mm) {
+    .canvas { max-width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-left">
+      <h1 class="header-title">五卡画布 · Five-Card Canvas</h1>
+      <p class="header-subtitle">把你的经验变成资产</p>
+    </div>
+    <div class="header-right">
+      日期：____________<br>
+      项目：____________
+    </div>
+  </header>
+
+  <!-- INSTRUCTION -->
+  <div class="instruction">
+    <span class="instruction-icon">💡</span>
+    <span><strong>从中间的案例卡开始</strong>——回忆你最近做的一个重要决定或项目，把它真实地写下来。然后向外扩展，填写其他卡片。</span>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards-area">
+
+    <!-- Row 1: Decision Card -->
+    <div class="row-decision">
+      <div class="card card--decision">
+        <div class="card-head">
+          <span class="card-icon">🌟</span>
+          <span class="card-name">决策卡 · Decision Card</span>
+        </div>
+        <p class="card-prompt">我在什么情况下做了什么选择 ——「什么时候用什么」</p>
+        <div class="card-lines"></div>
+      </div>
+    </div>
+
+    <!-- Row 2: Method | Case | Risk -->
+    <div class="row-middle">
+      <div class="card card--method">
+        <div class="card-head">
+          <span class="card-icon">⚡</span>
+          <span class="card-name">方法论卡</span>
+        </div>
+        <p class="card-prompt">我怎么做 —— 步骤、原则、框架</p>
+        <div class="card-lines"></div>
+      </div>
+
+      <div class="card card--case">
+        <div class="card-head">
+          <span class="card-icon">📖</span>
+          <span class="card-name">案例卡 · Case Card</span>
+        </div>
+        <p class="card-prompt">真实发生过的故事 —— 背景、过程、结果</p>
+        <div class="card-lines"></div>
+      </div>
+
+      <div class="card card--risk">
+        <div class="card-head">
+          <span class="card-icon">⚠️</span>
+          <span class="card-name">风险卡</span>
+        </div>
+        <p class="card-prompt">什么会出错 —— 陷阱、边界、反思</p>
+        <div class="card-lines"></div>
+      </div>
+    </div>
+
+    <!-- Row 3: Preference Card -->
+    <div class="row-preference">
+      <div class="card card--preference">
+        <div class="card-head">
+          <span class="card-icon">💭</span>
+          <span class="card-name">偏好卡 · Preference Card</span>
+        </div>
+        <p class="card-prompt">我偏好什么、在意什么 —— 价值观、品味、内心的秤</p>
+        <div class="card-lines"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-left">
+      &copy; 陈露 / ActionThinker &middot; CC BY-SA 4.0 &middot; 五卡体系
+    </div>
+    <div class="footer-right">
+      github.com/actionthinker/five-card-system
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>
